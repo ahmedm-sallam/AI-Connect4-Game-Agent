@@ -1,12 +1,16 @@
+# 20201126
+# 20201146
+# 20210614
+# 20200055
+
 import numpy as np
 import random
 import pygame
 import sys
 import math
-
-
 import pygame_menu
 
+# some constant values to use it in the Game and the Color of the GUI
 BLUE = (51, 110, 254)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
@@ -25,8 +29,8 @@ AI_PIECE = 2
 WINDOW_LENGTH = 4
 
 
+## this function  to start and creat the Game
 def RunGame(difficult):
-
     def create_board():
         board = np.zeros((ROW_COUNT, COLUMN_COUNT))
         return board
@@ -200,6 +204,7 @@ def RunGame(difficult):
 
         return best_col
 
+    # ----------------------------- the GUI of the board --------------------------------
     def draw_board(board):
         for c in range(COLUMN_COUNT):
             for r in range(ROW_COUNT):
@@ -217,29 +222,22 @@ def RunGame(difficult):
                         int(c * SQUARESIZE + SQUARESIZE / 2), height - int(r * SQUARESIZE + SQUARESIZE / 2)), RADIUS)
         pygame.display.update()
 
-
     game_over = False
 
     board = create_board()
     print_board(board)
-
     SQUARESIZE = 80
-
     width = COLUMN_COUNT * SQUARESIZE
     height = (ROW_COUNT + 1) * SQUARESIZE
-
     size = (width, height)
-
     RADIUS = int(SQUARESIZE / 2 - 5)
-
     screen = pygame.display.set_mode(size)
     draw_board(board)
     pygame.display.update()
-
     myfont = pygame.font.SysFont("Calibri", 50)
-
+    # to change between the AI and PLAYER
     turn = random.randint(PLAYER, AI)
-
+    # ----------------------------------------- the start of the Game -----------------------------
     while not game_over:
         pygame.time.wait(1000)
 
@@ -305,34 +303,33 @@ def RunGame(difficult):
         if game_over:
             pygame.time.wait(3000)
 
+
+## ------------------------------------------ the RUN of the GUI -------------------------------------------
 pygame.init()
-
 surface = pygame.display.set_mode((600, 400))
-
 selected_difficulty = 5
-def set_difficulty(value, difficulty):
-    # Do the job here !\
 
+
+def set_difficulty(value, difficulty):
     global selected_difficulty
     selected_difficulty = difficulty
-
     return difficulty
     pass
 
+
 def start_the_game():
-    print(selected_difficulty)
+    print(f"the difficulty = {selected_difficulty}")
+
+    # the GUI of the board open when RunGame start
     RunGame(selected_difficulty)
     # Do the job here !
     pass
 
 
-menu = pygame_menu.Menu('Welcome', 400, 300,theme=pygame_menu.themes.THEME_BLUE)
-
-# menu.add.text_input('Name :', default='John Doe')
-menu.add.selector('Difficulty :', [('Hard', 5), ('Medium', 3),('Easy', 1)], onchange=set_difficulty)
+menu = pygame_menu.Menu('CONECT 4 GAME', 400, 300, theme=pygame_menu.themes.THEME_BLUE)
+menu.add.selector('Difficulty :', [('Hard', 5), ('Medium', 3), ('Easy', 1)], onchange=set_difficulty)
 menu.add.button('Play', start_the_game)
 menu.add.button('Quit', pygame_menu.events.EXIT)
-
 menu.mainloop(surface)
 pygame.time.wait(3000)
 
