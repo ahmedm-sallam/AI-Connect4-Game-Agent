@@ -1,14 +1,15 @@
+# 20210614
 # 20201126
 # 20201146
-# 20210614
 # 20200055
 
 import numpy as np
 import random
 import pygame
-import sys
 import math
 import pygame_menu
+import time
+import matplotlib.pyplot as plt
 
 # some constant values to use it in the Game and the Color of the GUI
 BLUE = (51, 110, 254)
@@ -27,6 +28,12 @@ PLAYER_PIECE = 1
 AI_PIECE = 2
 
 WINDOW_LENGTH = 4
+nodes_explored = 0
+nodes_explored_pc = 0
+execution_times_ai = []
+execution_times_minimax = []
+nodes_explored_ai = []
+nodes_explored_minimax = []
 
 
 ## this function  to start and creat the Game
@@ -138,6 +145,7 @@ def RunGame(difficult):
             get_valid_locations(board)) == 0
 
     def minimax(board, depth, alpha, beta, maximizingPlayer):
+        global nodes_explored
         valid_locations = get_valid_locations(board)
         is_terminal = is_terminal_node(board)
         if depth == 0 or is_terminal:
@@ -157,6 +165,7 @@ def RunGame(difficult):
                 row = get_next_open_row(board, col)
                 b_copy = board.copy()
                 drop_piece(b_copy, row, col, AI_PIECE)
+                nodes_explored += 1
                 new_score = minimax(b_copy, depth - 1, alpha, beta, False)[1]
                 if new_score > value:
                     value = new_score
@@ -173,6 +182,7 @@ def RunGame(difficult):
                 row = get_next_open_row(board, col)
                 b_copy = board.copy()
                 drop_piece(b_copy, row, col, PLAYER_PIECE)
+                nodes_explored += 1
                 new_score = minimax(b_copy, depth - 1, alpha, beta, True)[1]
                 if new_score < value:
                     value = new_score
@@ -190,6 +200,7 @@ def RunGame(difficult):
         return valid_locations
 
     def pick_best_move(board, piece):
+        global nodes_explored_pc
         valid_locations = get_valid_locations(board)
         best_score = -10000
         best_col = random.choice(valid_locations)
@@ -197,10 +208,12 @@ def RunGame(difficult):
             row = get_next_open_row(board, col)
             temp_board = board.copy()
             drop_piece(temp_board, row, col, piece)
+            nodes_explored_pc += 1
             score = score_position(temp_board, piece)
             if score > best_score:
                 best_score = score
                 best_col = col
+                nodes_explored_pc += 1
 
         return best_col
 
@@ -240,27 +253,17 @@ def RunGame(difficult):
     # ----------------------------------------- the start of the Game -----------------------------
     while not game_over:
         pygame.time.wait(1000)
-
-        # for event in pygame.event.get():
-        # 	if event.type == pygame.QUIT:
-        # 		sys.exit()
-
-        # 	if event.type == pygame.MOUSEMOTION:
-        # 		pygame.draw.rect(screen, BLACK, (0,0, width, SQUARESIZE))
-        # 		posx = event.pos[0]
-        # 		if turn == PLAYER:
-        # 			pygame.draw.circle(screen, RED, (posx, int(SQUARESIZE/2)), RADIUS)
-
-        # 	pygame.display.update()
-
-        # 	if event.type == pygame.MOUSEBUTTONDOWN:
         pygame.draw.rect(screen, WHITE, (0, 0, width, SQUARESIZE))
         # print(event.pos)
         # Ask for Player 1 Input
         if turn == PLAYER:
-            # posx = event.pos[0]
-            # print(posx)
-            col = random.randint(0, 6)
+            start_time0 = time.time()
+            #col = random.randint(0, 6)
+            col = pick_best_move(board, AI_PIECE)
+            end_time0 = time.time()
+            execution_time = end_time0 - start_time0
+            execution_times_ai.append(execution_time)
+            nodes_explored_ai.append(nodes_explored_pc)
             print(col)
             if is_valid_location(board, col):
                 row = get_next_open_row(board, col)
@@ -279,11 +282,13 @@ def RunGame(difficult):
 
         # # Ask for Player 2 Input
         if turn == AI and not game_over:
+            start_time = time.time()
 
-            # col = random.randint(0, COLUMN_COUNT-1)
-            # col = pick_best_move(board, AI_PIECE)
             col, minimax_score = minimax(board, difficult, -math.inf, math.inf, True)
-
+            end_time = time.time()
+            execution_time = end_time - start_time
+            execution_times_minimax.append(execution_time)
+            nodes_explored_minimax.append(nodes_explored)
             if is_valid_location(board, col):
                 # pygame.time.wait(500)
                 row = get_next_open_row(board, col)
@@ -317,12 +322,42 @@ def set_difficulty(value, difficulty):
     pass
 
 
+def plot_the_algorithm():
+    print(f"Nodes explored by AI: {sum(nodes_explored_ai)}")
+    print(f"Time explored by AI: {sum(execution_times_ai)}")
+    print(f"Nodes explored by Minimax: {sum(nodes_explored_minimax)}")
+    print(f"Time explored by Minimax: {sum(execution_times_minimax)}")
+    # Plotting the execution times
+    labels = ['AI', 'Minimax']
+    x = np.arange(len(labels))
+    width = 0.35
+
+    fig, ax = plt.subplots()
+    rects1 = ax.bar(x, [sum(execution_times_ai), sum(execution_times_minimax)], width)
+
+    ax.set_ylabel('Execution Time')
+    ax.set_title('Comparison of Execution Time')
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels)
+
+    # Plotting the number of nodes explored
+    plt.figure()
+    plt.plot(range(1, len(nodes_explored_ai) + 1), nodes_explored_ai, label='AI')
+    plt.plot(range(1, len(nodes_explored_minimax) + 1), nodes_explored_minimax, label='Minimax')
+    plt.xlabel('Game Iteration')
+    plt.ylabel('Nodes Explored')
+    plt.title('Comparison of Nodes Explored')
+    plt.legend()
+
+    # Show the plots
+    plt.show()
+
+
 def start_the_game():
     print(f"the difficulty = {selected_difficulty}")
-
-    # the GUI of the board open when RunGame start
     RunGame(selected_difficulty)
-    # Do the job here !
+    plot_the_algorithm()
+
     pass
 
 
@@ -332,4 +367,3 @@ menu.add.button('Play', start_the_game)
 menu.add.button('Quit', pygame_menu.events.EXIT)
 menu.mainloop(surface)
 pygame.time.wait(3000)
-
