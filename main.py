@@ -10,6 +10,7 @@ import math
 import pygame_menu
 import time
 import matplotlib.pyplot as plt
+import asyncio
 
 # some constant values to use it in the Game and the Color of the GUI
 BLUE = (51, 110, 254)
@@ -37,7 +38,8 @@ nodes_explored_minimax = []
 
 
 ## this function  to start and creat the Game
-def RunGame(difficult):
+async def RunGame(difficult):
+
     def create_board():
         board = np.zeros((ROW_COUNT, COLUMN_COUNT))
         return board
@@ -235,7 +237,6 @@ def RunGame(difficult):
                         int(c * SQUARESIZE + SQUARESIZE / 2), height - int(r * SQUARESIZE + SQUARESIZE / 2)), RADIUS)
         pygame.display.update()
 
-    game_over = False
 
     board = create_board()
     print_board(board)
@@ -249,65 +250,69 @@ def RunGame(difficult):
     pygame.display.update()
     myfont = pygame.font.SysFont("Calibri", 50)
     # to change between the AI and PLAYER
-    turn = random.randint(PLAYER, AI)
     # ----------------------------------------- the start of the Game -----------------------------
+    
+    game_over = False
+    turn = random.randint(PLAYER, AI)
+
     while not game_over:
-        pygame.time.wait(1000)
-        pygame.draw.rect(screen, WHITE, (0, 0, width, SQUARESIZE))
-        # print(event.pos)
-        # Ask for Player 1 Input
-        if turn == PLAYER:
-            start_time0 = time.time()
-            #col = random.randint(0, 6)
-            col = pick_best_move(board, AI_PIECE)
-            end_time0 = time.time()
-            execution_time = end_time0 - start_time0
-            execution_times_ai.append(execution_time)
-            nodes_explored_ai.append(nodes_explored_pc)
-            print(col)
-            if is_valid_location(board, col):
-                row = get_next_open_row(board, col)
-                drop_piece(board, row, col, PLAYER_PIECE)
+            pygame.time.wait(1000)
+            pygame.draw.rect(screen, WHITE, (0, 0, width, SQUARESIZE))
+            # print(event.pos)
+            # Ask for Player 1 Input
+            if turn == PLAYER:
+                start_time0 = time.time()
+                #col = random.randint(0, 6)
+                col = pick_best_move(board, AI_PIECE)
+                end_time0 = time.time()
+                execution_time = end_time0 - start_time0
+                execution_times_ai.append(execution_time)
+                nodes_explored_ai.append(nodes_explored_pc)
+                print(col)
+                if is_valid_location(board, col):
+                    row = get_next_open_row(board, col)
+                    drop_piece(board, row, col, PLAYER_PIECE)
 
-                if winning_move(board, PLAYER_PIECE):
-                    label = myfont.render("Computer wins!!", 1, YELLOW)
-                    screen.blit(label, (40, 10))
-                    game_over = True
+                    if winning_move(board, PLAYER_PIECE):
+                        label = myfont.render("Computer wins!!", 1, YELLOW)
+                        screen.blit(label, (40, 10))
+                        game_over = True
 
-                turn += 1
-                turn = turn % 2
+                    turn += 1
+                    turn = turn % 2
 
-                print_board(board)
-                draw_board(board)
+                    print_board(board)
+                    draw_board(board)
 
-        # # Ask for Player 2 Input
-        if turn == AI and not game_over:
-            start_time = time.time()
+            # # Ask for Player 2 Input
+            if turn == AI and not game_over:
+                start_time = time.time()
 
-            col, minimax_score = minimax(board, difficult, -math.inf, math.inf, True)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            execution_times_minimax.append(execution_time)
-            nodes_explored_minimax.append(nodes_explored)
-            if is_valid_location(board, col):
-                # pygame.time.wait(500)
-                row = get_next_open_row(board, col)
-                drop_piece(board, row, col, AI_PIECE)
+                col, minimax_score = minimax(board, difficult, -math.inf, math.inf, True)
+                end_time = time.time()
+                execution_time = end_time - start_time
+                execution_times_minimax.append(execution_time)
+                nodes_explored_minimax.append(nodes_explored)
+                if is_valid_location(board, col):
+                    # pygame.time.wait(500)
+                    row = get_next_open_row(board, col)
+                    drop_piece(board, row, col, AI_PIECE)
 
-                if winning_move(board, AI_PIECE):
-                    label = myfont.render("AI wins!!", 1, BLUE)
-                    screen.blit(label, (40, 10))
-                    game_over = True
+                    if winning_move(board, AI_PIECE):
+                        label = myfont.render("AI wins!!", 1, BLUE)
+                        screen.blit(label, (40, 10))
+                        game_over = True
 
-                print_board(board)
-                draw_board(board)
+                    print_board(board)
+                    draw_board(board)
 
-                turn += 1
-                turn = turn % 2
+                    turn += 1
+                    turn = turn % 2
 
-        if game_over:
-            pygame.time.wait(3000)
-
+            if game_over:
+                pygame.time.wait(3000)
+            
+            asyncio.sleep(0)
 
 ## ------------------------------------------ the RUN of the GUI -------------------------------------------
 pygame.init()
@@ -355,7 +360,7 @@ def plot_the_algorithm():
 
 def start_the_game():
     print(f"the difficulty = {selected_difficulty}")
-    RunGame(selected_difficulty)
+    asyncio.run(RunGame(selected_difficulty))
     plot_the_algorithm()
 
     pass
